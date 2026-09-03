@@ -6,6 +6,8 @@ on:
     paths:
       - "app/**"
       - "gradle/**"
+      - "scripts/**"
+      - "third_party/**"
       - "*.gradle.kts"
       - "gradle.properties"
       - ".github/workflows/android-ci.yml"
@@ -13,6 +15,8 @@ on:
     paths:
       - "app/**"
       - "gradle/**"
+      - "scripts/**"
+      - "third_party/**"
       - "*.gradle.kts"
       - "gradle.properties"
       - ".github/workflows/android-ci.yml"
@@ -41,7 +45,10 @@ jobs:
             "platforms;android-37" \
             "build-tools;36.0.0" \
             "ndk;29.0.14206865" \
-            "cmake;3.22.1"
+            "cmake;3.31.6"
+
+      - name: Sync pinned llama.cpp
+        run: bash scripts/sync-llama.sh
 
       - name: Set up Gradle 9.6
         uses: gradle/actions/setup-gradle@v6
