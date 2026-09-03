@@ -1,0 +1,4 @@
+repository=https://github.com/ggml-org/llama.cpp.git
+commit=de8656bd94f1163188125542534e4bcbc9f9fb1f
+license=MIT
+purpose=Android on-device GGUF inference runtime
