@@ -112,18 +112,43 @@ The Android migration is active and the repository has moved beyond the Python-o
 - Current generation foundation is intentionally single-request/stateless at the context level; multi-turn context retention/management remains part of the later chat-engine/context-manager work.
 - Encoder-model generation is not supported by this chat generator yet; the initial target remains decoder-style GGUF chat LLMs.
 
+### Compose chat and local model import foundation implemented
+
+- Added a local model store under private app storage.
+- The app uses Android Storage Access Framework `OpenDocument` flow rather than broad filesystem permissions.
+- Imported files must use a `.gguf` filename and are checked for the `GGUF` file magic before being accepted.
+- Import copies the model into private app storage using a bounded buffer and keeps storage headroom to reduce partial/out-of-space failures.
+- SHA-256 is calculated during the copy so the imported model has a reproducible integrity fingerprint available for later model-integrity workflows.
+- Existing locally imported GGUF files are discovered and listed on launch.
+- Import names are sanitized and collisions create a new unique local filename instead of overwriting an existing model.
+- The Compose UI now includes a local model manager card:
+  - import GGUF from device
+  - list discovered local models
+  - load/switch a local model
+  - show import/load status and the most recent SHA-256 fingerprint
+- The Compose UI now includes an offline chat card:
+  - message input
+  - background local generation through `NativeRuntime.generateChat(...)`
+  - assistant text updated as token bytes are decoded into text
+  - visible generation state
+  - Stop button wired to native cancellation
+- Generation/model import work runs off the main UI thread; token text is posted back to the main thread for Compose state updates.
+- Composition disposal requests native generation cancellation.
+- The Android manifest still has no `INTERNET` permission, and the new import/chat flow does not add one.
+
 ### Next implementation milestone
 
-- Connect `NativeRuntime.generateChat(...)` to the Compose chat UI on a background execution path.
-- Add visible streaming assistant-message state plus Stop/cancel behavior.
-- Begin model manager/import work so users can select a local GGUF through Android-safe storage flows instead of supplying an absolute path manually.
-- Continue toward persistent multi-turn conversations without changing the locked offline architecture.
+- Obtain a real Android compile/test result and repair any source/API issues exposed by an executing build; do not skip this verification gate.
+- Expand model validation/metadata so the model manager can show architecture, quantization, context capability, and compatibility instead of only filename/size.
+- Connect Lite/Balanced/Power recommendations to actual context/thread/model-loading defaults.
+- Move from the current one-turn UI state toward persistent multi-turn conversation state and Room/SQLite storage.
+- Then continue context management and the broader locked chat-engine plan without changing the offline architecture.
 
 ### CI state
 
 - `.github/workflows/android-ci.yml` is defined for Android SDK/NDK/CMake setup, pinned llama.cpp sync, JVM unit tests, and debug APK assembly using Gradle 9.6.
-- GitHub Actions previously ended before workflow steps executed, and no workflow run was available for the latest streaming-generation commit at the time this context was updated.
-- Therefore the new native/Kotlin generation path is source-reviewed against the exact pinned upstream llama.cpp API but must **not** be described as build-verified until CI executes successfully or a local Android build is performed.
+- No workflow run was available through the GitHub connector for the latest native-streaming/model-import/Compose commits when this context was updated.
+- Therefore the current code has been source-reviewed against the exact pinned upstream llama.cpp API, but the Android application must **not** be described as build-verified until CI executes successfully or a local Android build is performed.
 
 ## Repository read-first protocol
 
