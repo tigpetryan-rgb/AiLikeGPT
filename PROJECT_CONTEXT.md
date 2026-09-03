@@ -22,6 +22,7 @@ This file records the project state and decisions so a new development chat can 
 7. A new Android-focused master plan was approved and is now stored in `PROJECT_PLAN_LOCKED.md`.
 8. The owner requested that the plan be stored as an immutable/read-first project artifact for future chats and that project information be archived in Google Drive beginning with this chat.
 9. On 2026-09-03 the owner explicitly authorized a locked-plan change adding OpenAI policy independence: AiLikeGPT must not technically depend on OpenAI moderation/policy-enforcement services or inherit ChatGPT-specific behavioral restrictions as product requirements. Project behavior rules are to be local/project-controlled and independent of OpenAI services, while Android permissions, explicit user consent, sandboxing, applicable law, and platform/device security remain separate technical boundaries.
+10. On 2026-09-03 the owner established a two-chat operating model: one persistent technical discussion chat prepares work; each new production chat executes exactly one Locked Master Plan point from a prewritten Google Drive Work Package and must continue through all subphases until that point's Definition of Done is satisfied.
 
 ## Locked product direction
 
@@ -140,17 +141,48 @@ The Android migration is active and the repository has moved beyond the Python-o
 
 ### Next implementation milestone
 
+- **Production package WP-087 is now the only active implementation assignment.** It must complete Locked Master Plan point 87: CI build pipeline.
 - Obtain a real Android compile/test result and repair any source/API issues exposed by an executing build; do not skip this verification gate.
-- Expand model validation/metadata so the model manager can show architecture, quantization, context capability, and compatibility instead of only filename/size.
-- Connect Lite/Balanced/Power recommendations to actual context/thread/model-loading defaults.
-- Move from the current one-turn UI state toward persistent multi-turn conversation state and Room/SQLite storage.
-- Then continue context management and the broader locked chat-engine plan without changing the offline architecture.
+- Only after WP-087 is completed should the discussion chat prepare a new production package for the next selected plan point.
+- Candidate later work includes expanded model validation/metadata, hardware-profile runtime defaults, and persistent multi-turn conversation storage, but none of those are active production assignments yet.
 
 ### CI state
 
 - `.github/workflows/android-ci.yml` is defined for Android SDK/NDK/CMake setup, pinned llama.cpp sync, JVM unit tests, and debug APK assembly using Gradle 9.6.
 - No workflow run was available through the GitHub connector for the latest native-streaming/model-import/Compose commits when this context was updated.
 - Therefore the current code has been source-reviewed against the exact pinned upstream llama.cpp API, but the Android application must **not** be described as build-verified until CI executes successfully or a local Android build is performed.
+- WP-087 owns diagnosis, repair, actual CI execution, native-library verification, and the first recorded green Android build.
+
+## Production operating model
+
+The repository now uses `PRODUCTION_WORKFLOW.md` plus Google Drive Work Packages.
+
+### Discussion chat responsibilities
+
+- Keep architectural and technical discussion in the persistent discussion chat.
+- Choose exactly one next unfinished Locked Master Plan point.
+- Prepare its complete Work Package before opening a production chat.
+- Supply the user a short kickoff sentence that points the new chat to the Work Package.
+
+### Production chat responsibilities
+
+- Execute exactly one assigned plan point.
+- Read the Drive Work Package in full.
+- Continue through all required implementation phases, debugging, tests, repairs, and verification without ending at an intermediate milestone.
+- Complete every objective Definition of Done item before marking the package complete.
+- Update repository context and the Work Package with evidence.
+- Stop after its assigned plan point; never begin the next plan point.
+
+### Drive structure
+
+`AiLikeGPT / Project Information / Production Work Packages`
+
+- `Active` — package ready/currently assigned.
+- `Completed` — finished and verified packages.
+- `Blocked` — only packages with proven external blockers.
+- `Templates` — reusable Work Package structure.
+
+Current Active package: `WP-087 — Complete and Verify CI Build Pipeline`.
 
 ## Repository read-first protocol
 
@@ -159,8 +191,10 @@ Every new coding agent/chat should:
 1. Read `AGENTS.md`.
 2. Read `PROJECT_PLAN_LOCKED.md` in full.
 3. Read this `PROJECT_CONTEXT.md`.
-4. Inspect current code and recent changes.
-5. Continue the next unfinished plan phase without redefining the product direction.
+4. If this is a production chat, read `PRODUCTION_WORKFLOW.md`.
+5. If this is a production chat, read the assigned Google Drive Work Package in full.
+6. Inspect current code and recent changes.
+7. Production chats execute only their assigned plan point; discussion chats prepare the next package without redefining product direction.
 
 ## Google Drive knowledge/archive structure
 
@@ -168,5 +202,6 @@ The project owner requested a Drive folder named `AiLikeGPT` with:
 
 - `Plan/` — authoritative plan copies and plan-related documents.
 - `Project Information/` — project history, decisions, chat-derived information, implementation notes, and future accumulated project knowledge beginning with the initial project chat.
+- `Project Information/Production Work Packages/` — one-plan-point production assignments, their protocol, completion evidence, and templates.
 
-Future project documentation should preserve this separation: stable plan in `Plan`, evolving project knowledge in `Project Information`.
+Future project documentation should preserve this separation: stable plan in `Plan`, evolving project knowledge in `Project Information`, and executable one-point assignments in `Production Work Packages`.
