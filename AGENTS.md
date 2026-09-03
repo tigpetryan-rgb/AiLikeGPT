@@ -8,9 +8,10 @@ Before proposing, planning, or changing code:
 
 1. Read `PROJECT_PLAN_LOCKED.md` in full.
 2. Read `PROJECT_CONTEXT.md` for the current project state and prior decisions.
-3. Read `PRODUCTION_WORKFLOW.md` if this is a production/execution chat.
+3. Read `PRODUCTION_WORKFLOW.md` if this is a production/execution or Failure Investigation chat.
 4. Inspect the existing repository before making changes.
 5. If this is a production chat, read the assigned Google Drive Work Package in full before implementation.
+6. If this is a Failure Investigation chat, read the assigned Google Drive Failure package and Failure Investigation Protocol before diagnosis.
 
 `PROJECT_PLAN_LOCKED.md` is the authoritative master plan.
 
@@ -33,13 +34,21 @@ The following principles are non-negotiable unless the project owner explicitly 
 
 ## Production-chat rule
 
-A production chat executes **exactly one** Locked Master Plan point from its assigned Google Drive Work Package.
+A production chat executes **exactly one** Locked Master Plan point from its assigned Google Drive Work Package, including a failure-derived repair package tied to that same point.
 
 It may divide that point into any number of implementation phases, commits, build attempts, debugging loops, or tests, but it must not end merely because one intermediate phase is finished. It must continue until the Work Package Definition of Done is satisfied, then stop without beginning the next plan point.
 
 The only allowed incomplete ending is a proven external blocker outside the repository and outside the connected tools available to the chat. Source-code failures, compiler failures, test failures, build failures, and integration bugs must be repaired within the same production chat.
 
-Detailed production protocol: `PRODUCTION_WORKFLOW.md`.
+## Failure-Investigation rule
+
+A Failure Investigation chat is **diagnosis and routing only**.
+
+It must not implement the production fix or make a fix commit. It must identify the root cause with evidence, update its Failure package, and before ending **automatically create or update an Active production repair Work Package** tied to the same Locked Plan point. It must verify that repair package in Drive, move the Failure package to Resolved, and return one short launch sentence naming the exact Active repair package for the next production chat.
+
+A Failure Investigation chat that ends with only analysis, recommendations, or a handoff paragraph—but no Active production repair package—is incomplete.
+
+Detailed operational protocol: `PRODUCTION_WORKFLOW.md` and the Google Drive Failure Investigation Protocol.
 
 ## Target architecture
 
