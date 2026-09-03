@@ -63,7 +63,7 @@ The Python prototype is **not the final product architecture**. It should be tre
 
 ## Android implementation progress — 2026-09-03
 
-The Android migration is now active and the repository has moved beyond the Python-only reference state.
+The Android migration is active and the repository has moved beyond the Python-only reference state.
 
 ### Phase 1 foundation implemented
 
@@ -87,7 +87,7 @@ The Android migration is now active and the repository has moved beyond the Pyth
 - Added unit tests for the profile policy.
 - Profile thresholds are an initial heuristic and must later be tuned against real device/model benchmarks without changing the locked product goals.
 
-### Phase 2 local inference integration started
+### Phase 2 local inference integration — generation foundation implemented
 
 - Pinned upstream `ggml-org/llama.cpp` revision:
   `de8656bd94f1163188125542534e4bcbc9f9fb1f`.
@@ -95,18 +95,35 @@ The Android migration is now active and the repository has moved beyond the Pyth
 - Added `scripts/sync-llama.sh` for deterministic development bootstrap of that revision.
 - Local synced source tree is intentionally ignored by Git; final offline distribution will package required native/runtime assets separately.
 - Native CMake detects the pinned source tree and links `llama` + `llama-common`; without it, the JNI foundation can still build as a stub.
-- Native backend initialization is wired through `llama_backend_init`.
-- Added JNI/Kotlin model lifecycle API:
-  - load local GGUF model by absolute path
-  - create llama context with context-size/thread settings
-  - query loaded state
-  - unload/free context and model
-- Next inference implementation milestone: tokenization, prompt/chat-template preparation, prefill/decode, sampler lifecycle, cancellation, and streaming token output.
+- Native backend initialization loads available GGML backends and initializes llama.cpp.
+- JNI/Kotlin model lifecycle supports local GGUF load, context creation, loaded-state query, and unload/free lifecycle.
+- Added chat generation foundation over the loaded local model:
+  - reads the GGUF/model chat template with `llama_model_chat_template`
+  - applies chat formatting with `llama_chat_apply_template`, with a plain fallback when the model has no template
+  - converts Kotlin/Java UTF-16 prompts to standard UTF-8 in native code instead of relying on JNI Modified UTF-8
+  - tokenizes locally with the model vocabulary
+  - resets the llama context for each generation while keeping the model loaded
+  - performs prompt prefill in bounded chunks
+  - samples using greedy mode at zero temperature or a `min-p -> temperature -> distribution` sampler chain otherwise
+  - streams generated token bytes through JNI
+  - exposes generation cancellation and generation-active state
+- Added an incremental UTF-8 decoder in Kotlin so token boundaries cannot corrupt split multi-byte characters.
+- Added JVM tests that deliberately stream Armenian text and emoji one byte at a time, plus an incomplete trailing UTF-8 case.
+- Current generation foundation is intentionally single-request/stateless at the context level; multi-turn context retention/management remains part of the later chat-engine/context-manager work.
+- Encoder-model generation is not supported by this chat generator yet; the initial target remains decoder-style GGUF chat LLMs.
+
+### Next implementation milestone
+
+- Connect `NativeRuntime.generateChat(...)` to the Compose chat UI on a background execution path.
+- Add visible streaming assistant-message state plus Stop/cancel behavior.
+- Begin model manager/import work so users can select a local GGUF through Android-safe storage flows instead of supplying an absolute path manually.
+- Continue toward persistent multi-turn conversations without changing the locked offline architecture.
 
 ### CI state
 
-- Added `.github/workflows/android-ci.yml` for Android SDK/NDK/CMake setup, pinned llama.cpp sync, JVM unit tests, and debug APK assembly using Gradle 9.6.
-- GitHub Actions runs on this repository are currently failing/ending before any job step executes, so the connector has not yet provided an actual compile/test result. This appears to be runner/account/platform execution state rather than a source-level compiler failure; do not claim the Android build is verified until a job executes successfully or a local Android build is performed.
+- `.github/workflows/android-ci.yml` is defined for Android SDK/NDK/CMake setup, pinned llama.cpp sync, JVM unit tests, and debug APK assembly using Gradle 9.6.
+- GitHub Actions previously ended before workflow steps executed, and no workflow run was available for the latest streaming-generation commit at the time this context was updated.
+- Therefore the new native/Kotlin generation path is source-reviewed against the exact pinned upstream llama.cpp API but must **not** be described as build-verified until CI executes successfully or a local Android build is performed.
 
 ## Repository read-first protocol
 
