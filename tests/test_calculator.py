@@ -1,16 +1,22 @@
+import unittest
+
 from ailikegpt.plugins.builtin.calculator import CalculatorTool
 
 
-def test_basic_arithmetic() -> None:
-    tool = CalculatorTool()
-    assert tool.run({"expression": "(12 + 3) * 4 / 2"}) == "30"
+class CalculatorToolTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tool = CalculatorTool()
+
+    def test_basic_arithmetic(self) -> None:
+        self.assertEqual(
+            self.tool.run({"expression": "(12 + 3) * 4 / 2"}),
+            "30",
+        )
+
+    def test_rejects_code_execution(self) -> None:
+        with self.assertRaises(ValueError):
+            self.tool.run({"expression": "__import__('os').system('echo nope')"})
 
 
-def test_rejects_code_execution() -> None:
-    tool = CalculatorTool()
-    try:
-        tool.run({"expression": "__import__('os').system('echo nope')"})
-    except ValueError:
-        pass
-    else:
-        raise AssertionError("calculator accepted a non-arithmetic expression")
+if __name__ == "__main__":
+    unittest.main()
