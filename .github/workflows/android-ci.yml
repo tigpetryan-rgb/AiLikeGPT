@@ -1,3 +1,4 @@
+# WP-087 verification run: this comment intentionally exercises pull_request triggering.
 name: Android CI
 
 on:
