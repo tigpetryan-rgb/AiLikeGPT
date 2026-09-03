@@ -1,22 +1,33 @@
 # AiLikeGPT
 
-AiLikeGPT is an **offline-first AI assistant** designed to run a local language model, memory, tools, and plugins on the user's own machine.
+AiLikeGPT is an **Android-first, fully offline AI assistant** designed to run its language model, memory, tools, plugins, and orchestration locally on the user's device.
 
-The core runtime does not require OpenAI, Anthropic, Google, or any other cloud AI API.
+The core product does **not** require OpenAI, Anthropic, Google, or any other cloud AI API to function.
 
-## Goals
+> **For every new development chat/agent:** read `AGENTS.md`, then `PROJECT_PLAN_LOCKED.md`, then `PROJECT_CONTEXT.md` before changing the project.
 
-- Local GGUF model inference through `llama.cpp` bindings.
-- Project-local tools and plugins.
-- Local SQLite conversation memory.
-- No mandatory network access at runtime.
-- Cross-platform Python core as the first implementation.
-- Clear permission boundaries for tools that touch files or the operating system.
+## Locked product target
 
-## Current MVP architecture
+- Android APK is the primary product.
+- Kotlin + Jetpack Compose for the application UI.
+- Native local inference through Android NDK/JNI and `llama.cpp`.
+- Local GGUF models with device-aware profiles.
+- Local Room/SQLite memory and optional local embeddings/vector search.
+- Local tools/plugins with explicit permission boundaries.
+- No mandatory backend server, account, subscription infrastructure, or AI API.
+- Final release must work in airplane mode / offline after installation and model availability.
+
+The complete approved roadmap is in [`PROJECT_PLAN_LOCKED.md`](PROJECT_PLAN_LOCKED.md).
+
+## Current repository state
+
+The repository currently contains an early Python offline reference prototype that validated several core ideas before the Android target was locked:
 
 ```text
 AiLikeGPT/
+├── AGENTS.md
+├── PROJECT_PLAN_LOCKED.md
+├── PROJECT_CONTEXT.md
 ├── config/
 │   └── default.toml
 ├── models/
@@ -33,60 +44,28 @@ AiLikeGPT/
 │       ├── registry.py
 │       └── builtin/
 │           └── calculator.py
-├── .gitignore
+├── tests/
 └── pyproject.toml
 ```
 
-## Runtime flow
+The Python prototype is a **behavior/reference implementation**, not the final platform architecture. Development now proceeds toward the locked Android/Kotlin/NDK architecture while preserving validated offline-agent concepts.
 
-1. The CLI loads the local configuration.
-2. `LocalModel` opens a GGUF model from `models/`.
-3. `Agent` sends the conversation and tool catalog directly to the local model.
-4. The model either returns a final answer or requests a local tool.
-5. The tool executes locally and its result is returned to the model.
-6. Messages are saved to a local SQLite database.
+## Core runtime concept
 
-## Quick start
-
-Requirements:
-
-- Python 3.11+
-- A local GGUF instruct/chat model
-- A working `llama-cpp-python` installation for your hardware
-
-```bash
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -e .
+```text
+User
+  -> Local model
+  -> Structured local tool/plugin (when needed)
+  -> Tool result
+  -> Local model
+  -> Final answer
 ```
 
-Place a GGUF model under `models/`, then update `config/default.toml`.
+Conversation data and project knowledge remain local by default.
 
-```bash
-ailikegpt
-```
+## Offline definition
 
-## What “offline” means
-
-After dependencies and a model are present locally, the AiLikeGPT runtime is intended to work without an internet connection. Model inference, tool execution, memory, and orchestration stay on-device.
-
-The model binary is intentionally not committed to Git because GGUF files are usually very large. A future packaged desktop distribution can bundle the selected model and dependencies for a true one-install offline experience.
-
-## Roadmap
-
-- [x] Offline-first project skeleton
-- [x] Local GGUF inference adapter
-- [x] Local tool registry
-- [x] SQLite chat memory
-- [x] CLI assistant
-- [ ] Streaming responses
-- [ ] Desktop UI
-- [ ] Plugin permission manifests
-- [ ] Sandboxed plugin execution
-- [ ] Local embeddings and semantic memory
-- [ ] Voice input/output
-- [ ] Multimodal local models
-- [ ] Fully bundled offline installer
+The v1.0 goal is not merely "works after calling a local server." The final application must be capable of running its core AI functions without internet access or a mandatory remote service. Distribution/model packaging will be designed so an offline installation bundle can be prepared in advance.
 
 ## License
 
