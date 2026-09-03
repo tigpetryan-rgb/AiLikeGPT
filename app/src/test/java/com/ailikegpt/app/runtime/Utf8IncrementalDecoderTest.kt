@@ -9,7 +9,7 @@ class Utf8IncrementalDecoderTest {
     fun decodesArmenianAndEmojiAcrossSingleByteChunks() {
         val expected = "Բարև աշխարհ 🌍 — offline AI"
         val emitted = StringBuilder()
-        val decoder = Utf8IncrementalDecoder(emitted::append)
+        val decoder = Utf8IncrementalDecoder { chunk -> emitted.append(chunk) }
 
         expected.toByteArray(StandardCharsets.UTF_8).forEach { byte ->
             decoder.push(byteArrayOf(byte))
@@ -22,7 +22,7 @@ class Utf8IncrementalDecoderTest {
     @Test
     fun replacesIncompleteTrailingUtf8SequenceAtStreamEnd() {
         val emitted = StringBuilder()
-        val decoder = Utf8IncrementalDecoder(emitted::append)
+        val decoder = Utf8IncrementalDecoder { chunk -> emitted.append(chunk) }
 
         decoder.push(byteArrayOf(0xE2.toByte(), 0x82.toByte()))
         decoder.finish()
