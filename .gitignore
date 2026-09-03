@@ -9,6 +9,15 @@ build/
 .env
 .DS_Store
 
+# Android / Gradle
+.gradle/
+.idea/
+local.properties
+*.iml
+app/build/
+.cxx/
+.externalNativeBuild/
+
 # Local runtime data
 data/
 *.sqlite3
@@ -19,3 +28,6 @@ models/*.gguf
 models/*.bin
 models/*.safetensors
 !models/README.md
+
+# Future vendored native model source build outputs
+third_party/llama.cpp/build*/
