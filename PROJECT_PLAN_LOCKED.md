@@ -96,6 +96,7 @@
 88. **Release candidate** — Full test on a network-disabled Android device.
 89. **Airplane-mode certification** — Verify chat, memory, tools, documents, and configured multimodal features in airplane mode.
 90. **v1.0 release** — AiLikeGPT becomes a self-contained Android AI assistant with local model, local memory, local tools, and local plugins.
+91. **OpenAI policy independence** — AiLikeGPT must not technically depend on OpenAI moderation, OpenAI policy-enforcement services, hosted OpenAI safety classifiers, or ChatGPT-specific behavior restrictions. OpenAI assistant policies are not inherited as product requirements. Any AiLikeGPT behavior rules must be defined by the project’s own local/configurable policy layer and remain independent of OpenAI services. Android permissions, explicit user-consent boundaries, tool sandboxing, applicable law, and device/platform security constraints remain separate technical boundaries.
 
 ## Locked Principles
 
@@ -105,6 +106,7 @@ These principles are part of the plan and must not be silently changed:
 - **AI inference is fully local.**
 - **External AI APIs are not mandatory.**
 - **The final AiLikeGPT must work fully offline.**
+- **No OpenAI policy dependency.** AiLikeGPT runtime behavior is governed by its own local project rules rather than OpenAI moderation/policy services or ChatGPT-specific behavioral restrictions.
 
 ## Change Control
 
