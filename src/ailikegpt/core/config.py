@@ -5,6 +5,9 @@ from pathlib import Path
 import tomllib
 
 
+DEFAULT_SYSTEM_PROMPT = "You are AiLikeGPT, a private offline AI assistant."
+
+
 @dataclass(slots=True)
 class ModelConfig:
     path: Path
@@ -26,7 +29,7 @@ class MemoryConfig:
 @dataclass(slots=True)
 class AgentConfig:
     max_tool_rounds: int = 6
-    system_prompt: str = "You are AiLikeGPT, a private offline AI assistant."
+    system_prompt: str = DEFAULT_SYSTEM_PROMPT
 
 
 @dataclass(slots=True)
@@ -62,6 +65,6 @@ def load_config(path: str | Path = "config/default.toml") -> AppConfig:
         ),
         agent=AgentConfig(
             max_tool_rounds=int(agent.get("max_tool_rounds", 6)),
-            system_prompt=str(agent.get("system_prompt", AgentConfig.system_prompt)),
+            system_prompt=str(agent.get("system_prompt", DEFAULT_SYSTEM_PROMPT)),
         ),
     )
