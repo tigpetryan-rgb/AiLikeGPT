@@ -1,0 +1,21 @@
+name: Runner Smoke
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/runner-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Prove hosted runner starts
+        run: |
+          echo "GitHub-hosted runner started successfully"
+          uname -a
