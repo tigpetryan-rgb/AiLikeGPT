@@ -29,5 +29,5 @@ models/*.bin
 models/*.safetensors
 !models/README.md
 
-# Future vendored native model source build outputs
-third_party/llama.cpp/build*/
+# Locally synced native dependency (revision pinned in third_party/llama.cpp.lock)
+third_party/llama.cpp/
