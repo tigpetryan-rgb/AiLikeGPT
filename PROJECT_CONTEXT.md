@@ -21,6 +21,7 @@ This file records the project state and decisions so a new development chat can 
 6. The original desktop target was explicitly changed to an **Android APK** target.
 7. A new Android-focused master plan was approved and is now stored in `PROJECT_PLAN_LOCKED.md`.
 8. The owner requested that the plan be stored as an immutable/read-first project artifact for future chats and that project information be archived in Google Drive beginning with this chat.
+9. On 2026-09-03 the owner explicitly authorized a locked-plan change adding OpenAI policy independence: AiLikeGPT must not technically depend on OpenAI moderation/policy-enforcement services or inherit ChatGPT-specific behavioral restrictions as product requirements. Project behavior rules are to be local/project-controlled and independent of OpenAI services, while Android permissions, explicit user consent, sandboxing, applicable law, and platform/device security remain separate technical boundaries.
 
 ## Locked product direction
 
@@ -33,6 +34,7 @@ The source of truth is `PROJECT_PLAN_LOCKED.md`. The critical invariants are:
 - No mandatory backend server or account.
 - User data is private-by-default and local-first.
 - Tools/plugins use explicit permissions and safe boundaries.
+- OpenAI moderation/policy services and ChatGPT-specific behavioral restrictions are not product dependencies or inherited requirements; AiLikeGPT uses its own local/project-controlled behavior rules.
 
 ## Target technical architecture
 
