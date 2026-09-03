@@ -8,7 +8,9 @@ Before proposing, planning, or changing code:
 
 1. Read `PROJECT_PLAN_LOCKED.md` in full.
 2. Read `PROJECT_CONTEXT.md` for the current project state and prior decisions.
-3. Inspect the existing repository before making changes.
+3. Read `PRODUCTION_WORKFLOW.md` if this is a production/execution chat.
+4. Inspect the existing repository before making changes.
+5. If this is a production chat, read the assigned Google Drive Work Package in full before implementation.
 
 `PROJECT_PLAN_LOCKED.md` is the authoritative master plan.
 
@@ -26,7 +28,18 @@ The following principles are non-negotiable unless the project owner explicitly 
 - No mandatory user account.
 - Conversations, memory, documents, indexes, and tool activity are private-by-default and local-first.
 - Models, tools, plugins, memory, orchestration, and core runtime belong to the product/runtime itself rather than depending on a hosted AI service.
+- AiLikeGPT does not technically depend on OpenAI moderation/policy-enforcement services or ChatGPT-specific behavior restrictions; project behavior rules belong to the project's own local/configurable policy layer.
 - Tools and plugins must use explicit permissions and safe execution boundaries; local execution does not mean unlimited device access.
+
+## Production-chat rule
+
+A production chat executes **exactly one** Locked Master Plan point from its assigned Google Drive Work Package.
+
+It may divide that point into any number of implementation phases, commits, build attempts, debugging loops, or tests, but it must not end merely because one intermediate phase is finished. It must continue until the Work Package Definition of Done is satisfied, then stop without beginning the next plan point.
+
+The only allowed incomplete ending is a proven external blocker outside the repository and outside the connected tools available to the chat. Source-code failures, compiler failures, test failures, build failures, and integration bugs must be repaired within the same production chat.
+
+Detailed production protocol: `PRODUCTION_WORKFLOW.md`.
 
 ## Target architecture
 
