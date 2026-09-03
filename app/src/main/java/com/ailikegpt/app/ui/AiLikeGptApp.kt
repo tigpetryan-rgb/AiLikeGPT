@@ -108,43 +108,43 @@ fun AiLikeGptApp(
     val modelPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument(),
     ) { uri ->
-        if (uri == null || modelBusy || generationRunning) return@rememberLauncherForActivityResult
-
-        modelBusy = true
-        modelStatus = "Importing GGUF into private app storage..."
-        scope.launch(Dispatchers.IO) {
-            when (val importResult = LocalModelStore.importFromUri(context, uri)) {
-                is ModelImportResult.Failure -> {
-                    withContext(Dispatchers.Main) {
-                        modelStatus = "Import failed: ${importResult.message}"
-                        modelBusy = false
-                    }
-                }
-
-                is ModelImportResult.Success -> {
-                    val imported = importResult.model
-                    val loadResult = NativeRuntime.loadModel(
-                        absolutePath = imported.absolutePath,
-                        contextSize = 4096,
-                        threads = hardware.cpuCores.coerceAtLeast(1),
-                    )
-
-                    withContext(Dispatchers.Main) {
-                        localModels = LocalModelStore.listModels(context)
-                        lastImportedSha256 = imported.sha256
-                        when (loadResult) {
-                            ModelLoadResult.Success -> {
-                                selectedModelName = imported.name
-                                modelLoaded = true
-                                modelStatus = "Imported and loaded ${imported.name}"
-                            }
-
-                            is ModelLoadResult.Failure -> {
-                                modelLoaded = NativeRuntime.isModelLoaded()
-                                modelStatus = "Imported ${imported.name}, but load failed: ${loadResult.message}"
-                            }
+        if (uri != null && !modelBusy && !generationRunning) {
+            modelBusy = true
+            modelStatus = "Importing GGUF into private app storage..."
+            scope.launch(Dispatchers.IO) {
+                when (val importResult = LocalModelStore.importFromUri(context, uri)) {
+                    is ModelImportResult.Failure -> {
+                        withContext(Dispatchers.Main) {
+                            modelStatus = "Import failed: ${importResult.message}"
+                            modelBusy = false
                         }
-                        modelBusy = false
+                    }
+
+                    is ModelImportResult.Success -> {
+                        val imported = importResult.model
+                        val loadResult = NativeRuntime.loadModel(
+                            absolutePath = imported.absolutePath,
+                            contextSize = 4096,
+                            threads = hardware.cpuCores.coerceAtLeast(1),
+                        )
+
+                        withContext(Dispatchers.Main) {
+                            localModels = LocalModelStore.listModels(context)
+                            lastImportedSha256 = imported.sha256
+                            when (loadResult) {
+                                ModelLoadResult.Success -> {
+                                    selectedModelName = imported.name
+                                    modelLoaded = true
+                                    modelStatus = "Imported and loaded ${imported.name}"
+                                }
+
+                                is ModelLoadResult.Failure -> {
+                                    modelLoaded = NativeRuntime.isModelLoaded()
+                                    modelStatus = "Imported ${imported.name}, but load failed: ${loadResult.message}"
+                                }
+                            }
+                            modelBusy = false
+                        }
                     }
                 }
             }
@@ -227,7 +227,7 @@ fun AiLikeGptApp(
                     onImport = {
                         modelPicker.launch(arrayOf("*/*"))
                     },
-                    onLoadModel = ::loadLocalModel,
+                    onLoadModel = { model -> loadLocalModel(model) },
                 )
 
                 ChatCard(
@@ -239,7 +239,7 @@ fun AiLikeGptApp(
                     generationRunning = generationRunning,
                     generationStatus = generationStatus,
                     sendEnabled = modelLoaded && !modelBusy && !generationRunning && prompt.isNotBlank(),
-                    onSend = ::sendPrompt,
+                    onSend = { sendPrompt() },
                     onStop = {
                         generationStatus = "Stopping..."
                         NativeRuntime.cancelGeneration()
