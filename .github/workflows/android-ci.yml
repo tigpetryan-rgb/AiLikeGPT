@@ -8,23 +8,30 @@ on:
       - "gradle/**"
       - "scripts/**"
       - "third_party/**"
-      - "*.gradle.kts"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
       - "gradle.properties"
       - ".github/workflows/android-ci.yml"
   pull_request:
+    branches: [main]
     paths:
       - "app/**"
       - "gradle/**"
       - "scripts/**"
       - "third_party/**"
-      - "*.gradle.kts"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
       - "gradle.properties"
       - ".github/workflows/android-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - name: Checkout
@@ -50,11 +57,59 @@ jobs:
       - name: Sync pinned llama.cpp
         run: bash scripts/sync-llama.sh
 
+      - name: Verify pinned llama.cpp revision
+        run: |
+          expected="$(awk -F= '$1 == "commit" { print $2 }' third_party/llama.cpp.lock)"
+          actual="$(git -C third_party/llama.cpp rev-parse HEAD)"
+          test "${actual}" = "${expected}"
+          echo "Verified llama.cpp revision: ${actual}"
+
       - name: Set up Gradle 9.6
         uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: "9.6.0"
           cache-provider: basic
 
-      - name: Unit tests and debug APK
-        run: gradle :app:testDebugUnitTest :app:assembleDebug --stacktrace
+      - name: Run debug JVM unit tests
+        run: gradle :app:testDebugUnitTest --stacktrace
+
+      - name: Assemble debug APK and native libraries
+        run: gradle :app:assembleDebug --stacktrace
+
+      - name: Verify native library packaged in APK
+        run: |
+          apk="$(find app/build/outputs/apk/debug -maxdepth 1 -name '*.apk' -print -quit)"
+          test -n "${apk}"
+          echo "Inspecting ${apk}"
+          unzip -l "${apk}" | tee apk-contents.txt
+          grep -Fq "lib/arm64-v8a/libailikegpt_native.so" apk-contents.txt
+          grep -E "lib/arm64-v8a/.*\.so" apk-contents.txt | tee native-libraries.txt
+          echo "Verified lib/arm64-v8a/libailikegpt_native.so"
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ailikegpt-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload JVM test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-unit-test-report
+          path: app/build/reports/tests/testDebugUnitTest/**
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload APK inspection evidence
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-native-inspection
+          path: |
+            apk-contents.txt
+            native-libraries.txt
+          if-no-files-found: error
+          retention-days: 14
