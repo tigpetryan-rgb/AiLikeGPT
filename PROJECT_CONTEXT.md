@@ -61,6 +61,53 @@ Before the Android target was locked, a small offline Python reference prototype
 
 The Python prototype is **not the final product architecture**. It should be treated as a behavior/reference prototype while the implementation migrates toward Android/Kotlin/NDK.
 
+## Android implementation progress — 2026-09-03
+
+The Android migration is now active and the repository has moved beyond the Python-only reference state.
+
+### Phase 1 foundation implemented
+
+- Added Gradle Android project structure with `app` module.
+- Stack pinned to Android Gradle Plugin 9.4.0, Kotlin 2.4.10, Compose BOM 2026.08.00, JDK 17.
+- Uses AGP 9 built-in Kotlin rather than the obsolete `kotlin-android` application pattern.
+- `compileSdk = 37`, `targetSdk = 37`, initial `minSdk = 28`.
+- Initial ABI target: `arm64-v8a`.
+- Android NDK target: `29.0.14206865`.
+- CMake/JNI native shared library target: `ailikegpt_native`.
+- Compose foundation screen reports native runtime and device information.
+- Android manifest intentionally requests no `INTERNET` permission.
+
+### Hardware/profile layer implemented
+
+- Reads total/available RAM.
+- Reads available app storage.
+- Reads CPU core count and supported ABIs.
+- Reads OpenGL ES capability and reported Vulkan hardware level.
+- Added initial `Lite`, `Balanced`, `Power` recommendation policy.
+- Added unit tests for the profile policy.
+- Profile thresholds are an initial heuristic and must later be tuned against real device/model benchmarks without changing the locked product goals.
+
+### Phase 2 local inference integration started
+
+- Pinned upstream `ggml-org/llama.cpp` revision:
+  `de8656bd94f1163188125542534e4bcbc9f9fb1f`.
+- Pin is stored in `third_party/llama.cpp.lock`.
+- Added `scripts/sync-llama.sh` for deterministic development bootstrap of that revision.
+- Local synced source tree is intentionally ignored by Git; final offline distribution will package required native/runtime assets separately.
+- Native CMake detects the pinned source tree and links `llama` + `llama-common`; without it, the JNI foundation can still build as a stub.
+- Native backend initialization is wired through `llama_backend_init`.
+- Added JNI/Kotlin model lifecycle API:
+  - load local GGUF model by absolute path
+  - create llama context with context-size/thread settings
+  - query loaded state
+  - unload/free context and model
+- Next inference implementation milestone: tokenization, prompt/chat-template preparation, prefill/decode, sampler lifecycle, cancellation, and streaming token output.
+
+### CI state
+
+- Added `.github/workflows/android-ci.yml` for Android SDK/NDK/CMake setup, pinned llama.cpp sync, JVM unit tests, and debug APK assembly using Gradle 9.6.
+- GitHub Actions runs on this repository are currently failing/ending before any job step executes, so the connector has not yet provided an actual compile/test result. This appears to be runner/account/platform execution state rather than a source-level compiler failure; do not claim the Android build is verified until a job executes successfully or a local Android build is performed.
+
 ## Repository read-first protocol
 
 Every new coding agent/chat should:
