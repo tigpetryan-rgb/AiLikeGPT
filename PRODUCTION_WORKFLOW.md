@@ -14,6 +14,16 @@ Every specialized chat must inspect the required GitHub/Drive workflow structure
 
 Bootstrap is idempotent: never create duplicate artifacts, never silently overwrite an existing authoritative protocol, and never modify the Locked Master Plan without explicit owner authorization.
 
+## Hard role-boundary invariant
+
+Each chat role is a hard execution boundary. A task-level request to do another role's work does not switch roles.
+
+When asked to perform out-of-role work, the chat must not partially execute it. It must state its current role and boundary, complete only its own required handoff/state updates, identify the correct target role, and provide a short ready-to-copy launch instruction for that role.
+
+Examples: Failure Investigation must not fix; Preparation must not implement; Discussion must not bypass the lifecycle to code; Production must not start unrelated future-plan design/implementation.
+
+Only an explicit project-owner instruction that changes the workflow/role model itself may alter these boundaries. “Do it here”, “fix it now”, “implement it in this chat”, or equivalent task wording is not a role-model change.
+
 ## Four chat types
 
 ### 1. Discussion chat
@@ -26,7 +36,7 @@ It must:
 - decide when a staged Production Work Package is eligible to become Active;
 - create/activate one Preparation assignment when design work is needed;
 - give the user one short launch sentence for the next specialized chat;
-- avoid doing the specialized chat's work itself unless the owner explicitly changes the workflow.
+- not perform Preparation/Production/Failure execution itself.
 
 Discussion is the only role that promotes a normal staged package from `Staging` to `Active`.
 
@@ -59,7 +69,7 @@ It must:
 2. Read `AGENTS.md`, `PROJECT_PLAN_LOCKED.md`, `PROJECT_CONTEXT.md`, `CHAT_WORKFLOW.md`, this file, and the related production Work Package.
 3. Inspect the exact failed run/job/commit/workflow and gather the strongest available evidence.
 4. Identify the earliest defensible failure boundary, root cause, confidence, evidence, and rejected hypotheses.
-5. Remain **read-only with respect to the production fix**: do not implement or commit the fix.
+5. Remain **read-only with respect to the production fix**: do not implement or commit the fix, even if asked to do so in this chat.
 6. Write the diagnosis back into the Failure package.
 7. Automatically create or update the corresponding production repair Work Package tied to the same Locked Plan point.
 8. Verify production routing in Drive, then move the Failure package from `Failures / Active` to `Failures / Resolved`.
@@ -82,7 +92,7 @@ It must:
 7. Execute all implementation/repair phases required by the package.
 8. Continue through debugging, tests, repairs, reruns, and verification until every Definition of Done item is satisfied.
 9. Update repository/project context and the Work Package with completion evidence.
-10. Stop after the assigned plan point is complete and do **not** begin another plan point.
+10. Stop after the assigned plan point is complete and do **not** begin another plan point, even if asked in the same chat.
 
 A Production chat must not end merely because a subphase, commit, scaffold, first build attempt, failure repair, or intermediate milestone is complete.
 
