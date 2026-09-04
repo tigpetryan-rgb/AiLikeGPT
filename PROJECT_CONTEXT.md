@@ -24,6 +24,7 @@ This file records the project state and decisions so a new development chat can 
 9. On 2026-09-03 the owner explicitly authorized a locked-plan change adding OpenAI policy independence: AiLikeGPT must not technically depend on OpenAI moderation/policy-enforcement services or inherit ChatGPT-specific behavioral restrictions as product requirements. Project behavior rules are local/project-controlled and independent of OpenAI services, while Android permissions, explicit user consent, sandboxing, applicable law, and platform/device security remain separate technical boundaries.
 10. On 2026-09-03 the owner established strict separation between persistent technical discussion, one-plan-point production execution, and failure investigation/repair routing.
 11. On 2026-09-04 the owner added a fourth role: **Preparation chat**. One Preparation chat designs exactly one future Locked Master Plan point without production-code implementation, then creates a production-ready Work Package in `Production Work Packages / Staging`. This allows future work to be fully designed while the current CI gate is externally blocked without accumulating unverified source code.
+12. On 2026-09-04 the owner made all four chat roles **hard execution boundaries**. A task-level request inside the wrong chat does not switch roles. The current chat must refuse only the out-of-role action, finish its own handoff obligations, identify the correct target role, and provide a ready-to-copy launch instruction. Only an explicit owner instruction that changes the workflow/role model itself can change these boundaries.
 
 ## Locked product direction
 
@@ -127,7 +128,15 @@ However, the owner explicitly authorized **Preparation work while this gate is b
 
 ## Four-chat operating model
 
-The repository uses `PRODUCTION_WORKFLOW.md`, `PREPARATION_WORKFLOW.md`, and Google Drive packages.
+The repository uses `CHAT_WORKFLOW.md`, `PRODUCTION_WORKFLOW.md`, `PREPARATION_WORKFLOW.md`, and Google Drive packages.
+
+### Hard role-boundary invariant
+
+Every chat must remain inside its assigned role even if the user asks it to perform another role's task. A task-level request is not a role switch.
+
+For out-of-role requests, the chat must state its current role and boundary, refuse only the out-of-role action, finish only its own required handoff/state work, identify the correct target role, and provide a short ready-to-copy launch instruction. It must not partially perform the target role's work.
+
+Only an explicit owner instruction that clearly changes the workflow/role model itself may change these boundaries.
 
 ### Discussion chat
 
@@ -136,13 +145,14 @@ The repository uses `PRODUCTION_WORKFLOW.md`, `PREPARATION_WORKFLOW.md`, and Goo
 - Creates/activates one Preparation assignment.
 - Decides when a staged production package may be promoted to Active.
 - Gives one short kickoff sentence for the specialized chat.
+- Does not implement Production/Failure/Preparation execution itself.
 
 ### Preparation chat
 
 - Exactly one future Locked Master Plan point.
 - Reads the assigned `Preparation / Active` package and relevant repository state.
 - Resolves architecture, file-by-file changes, data/state, APIs/contracts, UI flows, migrations, tests, risks and boundaries as applicable.
-- Does **not** implement production application/native/workflow code and does not make implementation commits.
+- Does **not** implement production application/native/workflow code and does not make implementation commits, even if asked in that chat.
 - Creates the production-ready Work Package under `Production Work Packages / Staging`.
 - Moves its Preparation package to `Preparation / Completed` after verified staging.
 
@@ -153,15 +163,15 @@ The repository uses `PRODUCTION_WORKFLOW.md`, `PREPARATION_WORKFLOW.md`, and Goo
 - Implements, debugs, tests, repairs and verifies until the package Definition of Done is satisfied.
 - Source/compiler/test/build/integration failures are work to fix, not blockers.
 - Only a proven external restriction outside repository/tool control permits an incomplete ending.
-- Stops after the assigned point; never begins a second point.
+- Stops after the assigned point; never begins a second point, even if asked in the same chat.
 
 ### Failure Investigation chat
 
 - Exactly one concrete failure.
-- Diagnoses and gathers evidence; does not implement the fix.
+- Diagnoses and gathers evidence; does not implement the fix, even if explicitly asked to fix it in that chat.
 - Writes root cause/evidence into its Failure package.
 - Automatically creates or updates the same-plan-point production repair package and verifies routing.
-- Moves the Failure package to Resolved and gives a one-line Production launch sentence.
+- Moves the Failure package to Resolved and gives a one-line Production Repair launch sentence.
 
 ## Drive structure
 
@@ -197,12 +207,12 @@ Every new project chat should:
 1. Read `AGENTS.md`.
 2. Read `PROJECT_PLAN_LOCKED.md` in full.
 3. Read this `PROJECT_CONTEXT.md`.
-4. Identify its role before acting.
+4. Read `CHAT_WORKFLOW.md` and identify its role before acting.
 5. Preparation chat: read `PRODUCTION_WORKFLOW.md`, `PREPARATION_WORKFLOW.md`, the Drive Preparation Protocol and assigned Preparation package.
 6. Production chat: read `PRODUCTION_WORKFLOW.md` and the assigned Active Work Package.
 7. Failure Investigation chat: read `PRODUCTION_WORKFLOW.md`, the Failure Protocol, assigned Failure package and related production package.
 8. Inspect current repository state relevant to its assignment.
-9. Respect role boundaries and the one-plan-point/one-failure rule.
+9. Respect hard role boundaries and the one-plan-point/one-failure rule.
 
 ## Google Drive knowledge/archive structure
 
