@@ -11,10 +11,27 @@ Authoritative Drive location:
 1. `AGENTS.md`
 2. `PROJECT_PLAN_LOCKED.md` in full
 3. `PROJECT_CONTEXT.md`
-4. `PRODUCTION_WORKFLOW.md`
-5. this file
-6. the assigned Drive Preparation package under `Preparation / Active`
-7. relevant current repository files
+4. `CHAT_WORKFLOW.md`
+5. `PRODUCTION_WORKFLOW.md`
+6. this file
+7. the assigned Drive Preparation package under `Preparation / Active`
+8. relevant current repository files
+
+## Hard Preparation boundary
+
+Preparation is a hard execution role, not a temporary mode.
+
+If the user asks this chat to implement code, fix a build/source bug, run a production repair, activate unrelated production work, or otherwise perform Production/Failure/Discussion work, do not perform that work here.
+
+Instead:
+
+1. state that this chat is the Preparation role and the requested action is outside its boundary;
+2. continue/finish only the design and handoff obligations for the assigned PREP package;
+3. create or update the correct staged Production Work Package when that is the proper handoff;
+4. identify the correct target role;
+5. return a short ready-to-copy launch instruction for that role.
+
+A task-level user instruction such as “implement it here” does not authorize a role change. Only an explicit owner instruction changing the workflow/role model itself may change this boundary.
 
 ## One-point rule
 
