@@ -20,9 +20,10 @@ This file records the project state and decisions so a new development chat can 
 5. The owner requested a fixed plan through completion.
 6. The original desktop target was explicitly changed to an **Android APK** target.
 7. A new Android-focused master plan was approved and is now stored in `PROJECT_PLAN_LOCKED.md`.
-8. The owner requested that the plan be stored as an immutable/read-first project artifact for future chats and that project information be archived in Google Drive beginning with this chat.
-9. On 2026-09-03 the owner explicitly authorized a locked-plan change adding OpenAI policy independence: AiLikeGPT must not technically depend on OpenAI moderation/policy-enforcement services or inherit ChatGPT-specific behavioral restrictions as product requirements. Project behavior rules are to be local/project-controlled and independent of OpenAI services, while Android permissions, explicit user consent, sandboxing, applicable law, and platform/device security remain separate technical boundaries.
-10. On 2026-09-03 the owner established a two-chat operating model: one persistent technical discussion chat prepares work; each new production chat executes exactly one Locked Master Plan point from a prewritten Google Drive Work Package and must continue through all subphases until that point's Definition of Done is satisfied.
+8. The owner requested that the plan be stored as an immutable/read-first project artifact for future chats and that project information be archived in Google Drive beginning with the initial chat.
+9. On 2026-09-03 the owner explicitly authorized a locked-plan change adding OpenAI policy independence: AiLikeGPT must not technically depend on OpenAI moderation/policy-enforcement services or inherit ChatGPT-specific behavioral restrictions as product requirements. Project behavior rules are local/project-controlled and independent of OpenAI services, while Android permissions, explicit user consent, sandboxing, applicable law, and platform/device security remain separate technical boundaries.
+10. On 2026-09-03 the owner established strict separation between persistent technical discussion, one-plan-point production execution, and failure investigation/repair routing.
+11. On 2026-09-04 the owner added a fourth role: **Preparation chat**. One Preparation chat designs exactly one future Locked Master Plan point without production-code implementation, then creates a production-ready Work Package in `Production Work Packages / Staging`. This allows future work to be fully designed while the current CI gate is externally blocked without accumulating unverified source code.
 
 ## Locked product direction
 
@@ -62,9 +63,9 @@ Before the Android target was locked, a small offline Python reference prototype
 - Configuration under `config/default.toml`.
 - Basic calculator safety/unit test.
 
-The Python prototype is **not the final product architecture**. It should be treated as a behavior/reference prototype while the implementation migrates toward Android/Kotlin/NDK.
+The Python prototype is **not the final product architecture**. It is a behavior/reference prototype while implementation migrates toward Android/Kotlin/NDK.
 
-## Android implementation progress — 2026-09-03
+## Android implementation progress
 
 The Android migration is active and the repository has moved beyond the Python-only reference state.
 
@@ -90,118 +91,125 @@ The Android migration is active and the repository has moved beyond the Python-o
 - Added unit tests for the profile policy.
 - Profile thresholds are an initial heuristic and must later be tuned against real device/model benchmarks without changing the locked product goals.
 
-### Phase 2 local inference integration — generation foundation implemented
+### Local inference generation foundation implemented
 
-- Pinned upstream `ggml-org/llama.cpp` revision:
-  `de8656bd94f1163188125542534e4bcbc9f9fb1f`.
+- Pinned upstream `ggml-org/llama.cpp` revision `de8656bd94f1163188125542534e4bcbc9f9fb1f`.
 - Pin is stored in `third_party/llama.cpp.lock`.
-- Added `scripts/sync-llama.sh` for deterministic development bootstrap of that revision.
-- Local synced source tree is intentionally ignored by Git; final offline distribution will package required native/runtime assets separately.
-- Native CMake detects the pinned source tree and links `llama` + `llama-common`; without it, the JNI foundation can still build as a stub.
-- Native backend initialization loads available GGML backends and initializes llama.cpp.
+- Added `scripts/sync-llama.sh` for deterministic bootstrap of that revision.
+- Native CMake links the local llama.cpp tree when synchronized.
 - JNI/Kotlin model lifecycle supports local GGUF load, context creation, loaded-state query, and unload/free lifecycle.
-- Added chat generation foundation over the loaded local model:
-  - reads the GGUF/model chat template with `llama_model_chat_template`
-  - applies chat formatting with `llama_chat_apply_template`, with a plain fallback when the model has no template
-  - converts Kotlin/Java UTF-16 prompts to standard UTF-8 in native code instead of relying on JNI Modified UTF-8
-  - tokenizes locally with the model vocabulary
-  - resets the llama context for each generation while keeping the model loaded
-  - performs prompt prefill in bounded chunks
-  - samples using greedy mode at zero temperature or a `min-p -> temperature -> distribution` sampler chain otherwise
-  - streams generated token bytes through JNI
-  - exposes generation cancellation and generation-active state
-- Added an incremental UTF-8 decoder in Kotlin so token boundaries cannot corrupt split multi-byte characters.
-- Added JVM tests that deliberately stream Armenian text and emoji one byte at a time, plus an incomplete trailing UTF-8 case.
-- Current generation foundation is intentionally single-request/stateless at the context level; multi-turn context retention/management remains part of the later chat-engine/context-manager work.
-- Encoder-model generation is not supported by this chat generator yet; the initial target remains decoder-style GGUF chat LLMs.
+- Chat generation applies the model chat template when available, performs local tokenization/prefill/sampling, streams token bytes through JNI, and supports cancellation.
+- Kotlin incremental UTF-8 decoding protects split multibyte characters.
+- JVM tests cover Armenian/emoji byte streaming and incomplete trailing UTF-8.
+- Current generation is intentionally single-request/stateless at the context level; persistent multi-turn context belongs to later plan work.
+- Initial target remains decoder-style GGUF chat LLMs.
 
 ### Compose chat and local model import foundation implemented
 
-- Added a local model store under private app storage.
-- The app uses Android Storage Access Framework `OpenDocument` flow rather than broad filesystem permissions.
-- Imported files must use a `.gguf` filename and are checked for the `GGUF` file magic before being accepted.
-- Import copies the model into private app storage using a bounded buffer and keeps storage headroom to reduce partial/out-of-space failures.
-- SHA-256 is calculated during the copy so the imported model has a reproducible integrity fingerprint available for later model-integrity workflows.
-- Existing locally imported GGUF files are discovered and listed on launch.
-- Import names are sanitized and collisions create a new unique local filename instead of overwriting an existing model.
-- The Compose UI now includes a local model manager card:
-  - import GGUF from device
-  - list discovered local models
-  - load/switch a local model
-  - show import/load status and the most recent SHA-256 fingerprint
-- The Compose UI now includes an offline chat card:
-  - message input
-  - background local generation through `NativeRuntime.generateChat(...)`
-  - assistant text updated as token bytes are decoded into text
-  - visible generation state
-  - Stop button wired to native cancellation
-- Generation/model import work runs off the main UI thread; token text is posted back to the main thread for Compose state updates.
-- Composition disposal requests native generation cancellation.
-- The Android manifest still has no `INTERNET` permission, and the new import/chat flow does not add one.
+- Local model store under private app storage.
+- Android Storage Access Framework `OpenDocument` import flow; no broad storage permission.
+- `.gguf` extension and `GGUF` magic validation.
+- Bounded copy, storage headroom, SHA-256 during import, sanitized unique names and cleanup on failure.
+- Compose model manager can import, list, load and switch local models and display status/fingerprint.
+- Compose offline chat provides input, background local generation, streamed assistant updates, generation state and Stop/cancel.
+- Import/generation run off the main UI thread.
+- Android manifest still has no `INTERNET` permission.
 
-### Next implementation milestone
+## Current CI / production gate
 
-- **Production package WP-087 is now the only active implementation assignment.** It must complete Locked Master Plan point 87: CI build pipeline.
-- Obtain a real Android compile/test result and repair any source/API issues exposed by an executing build; do not skip this verification gate.
-- Only after WP-087 is completed should the discussion chat prepare a new production package for the next selected plan point.
-- Candidate later work includes expanded model validation/metadata, hardware-profile runtime defaults, and persistent multi-turn conversation storage, but none of those are active production assignments yet.
+Locked Master Plan point **87 — CI build pipeline** remains the implementation gate.
 
-### CI state
+The GitHub-hosted runner failure was diagnosed to an account-level GitHub Actions usage restriction after included private-repository Actions minutes were exhausted. The repository-side Android CI workflow is prepared, but no executing hosted runner has yet produced a real Android build/test result. Therefore the Android application must **not** be described as build-verified.
 
-- `.github/workflows/android-ci.yml` is defined for Android SDK/NDK/CMake setup, pinned llama.cpp sync, JVM unit tests, and debug APK assembly using Gradle 9.6.
-- No workflow run was available through the GitHub connector for the latest native-streaming/model-import/Compose commits when this context was updated.
-- Therefore the current code has been source-reviewed against the exact pinned upstream llama.cpp API, but the Android application must **not** be described as build-verified until CI executes successfully or a local Android build is performed.
-- WP-087 owns diagnosis, repair, actual CI execution, native-library verification, and the first recorded green Android build.
+The WP-087 production/repair packages remain Blocked until GitHub-hosted execution is restored or another explicitly approved execution route is used. No later feature Production package is authorized merely because WP-087 is blocked.
 
-## Production operating model
+However, the owner explicitly authorized **Preparation work while this gate is blocked**: future Locked Plan points may be completely designed in separate one-point Preparation chats and their production-ready Work Packages may be queued under `Production Work Packages / Staging`. This preparation must not implement production source code.
 
-The repository now uses `PRODUCTION_WORKFLOW.md` plus Google Drive Work Packages.
+## Four-chat operating model
 
-### Discussion chat responsibilities
+The repository uses `PRODUCTION_WORKFLOW.md`, `PREPARATION_WORKFLOW.md`, and Google Drive packages.
 
-- Keep architectural and technical discussion in the persistent discussion chat.
-- Choose exactly one next unfinished Locked Master Plan point.
-- Prepare its complete Work Package before opening a production chat.
-- Supply the user a short kickoff sentence that points the new chat to the Work Package.
+### Discussion chat
 
-### Production chat responsibilities
+- Persistent technical/project-control chat.
+- Chooses sequencing and the next point to prepare.
+- Creates/activates one Preparation assignment.
+- Decides when a staged production package may be promoted to Active.
+- Gives one short kickoff sentence for the specialized chat.
 
-- Execute exactly one assigned plan point.
-- Read the Drive Work Package in full.
-- Continue through all required implementation phases, debugging, tests, repairs, and verification without ending at an intermediate milestone.
-- Complete every objective Definition of Done item before marking the package complete.
-- Update repository context and the Work Package with evidence.
-- Stop after its assigned plan point; never begin the next plan point.
+### Preparation chat
 
-### Drive structure
+- Exactly one future Locked Master Plan point.
+- Reads the assigned `Preparation / Active` package and relevant repository state.
+- Resolves architecture, file-by-file changes, data/state, APIs/contracts, UI flows, migrations, tests, risks and boundaries as applicable.
+- Does **not** implement production application/native/workflow code and does not make implementation commits.
+- Creates the production-ready Work Package under `Production Work Packages / Staging`.
+- Moves its Preparation package to `Preparation / Completed` after verified staging.
+
+### Production chat
+
+- Exactly one assigned Locked Plan point.
+- Reads the Active Work Package in full.
+- Implements, debugs, tests, repairs and verifies until the package Definition of Done is satisfied.
+- Source/compiler/test/build/integration failures are work to fix, not blockers.
+- Only a proven external restriction outside repository/tool control permits an incomplete ending.
+- Stops after the assigned point; never begins a second point.
+
+### Failure Investigation chat
+
+- Exactly one concrete failure.
+- Diagnoses and gathers evidence; does not implement the fix.
+- Writes root cause/evidence into its Failure package.
+- Automatically creates or updates the same-plan-point production repair package and verifies routing.
+- Moves the Failure package to Resolved and gives a one-line Production launch sentence.
+
+## Drive structure
 
 `AiLikeGPT / Project Information / Production Work Packages`
 
-- `Active` — package ready/currently assigned.
-- `Completed` — finished and verified packages.
-- `Blocked` — only packages with proven external blockers.
-- `Templates` — reusable Work Package structure.
+Main production lifecycle:
 
-Current Active package: `WP-087 — Complete and Verify CI Build Pipeline`.
+- `Staging` — production-ready packages prepared in advance, not yet authorized to execute.
+- `Active` — exactly the production package currently authorized to execute.
+- `Completed` — finished and verified production packages.
+- `Blocked` — externally blocked production packages.
+- `Templates` — reusable production package structure.
+
+Preparation lifecycle:
+
+- `Preparation / Active`
+- `Preparation / Completed`
+- `Preparation / Blocked`
+- `Preparation / Templates`
+- `Preparation Chat Protocol — One Plan Point, No Production Code`
+
+Failure lifecycle:
+
+- `Failures / Active`
+- `Failures / Resolved`
+- `Failures / Templates`
+- Failure Investigation Protocol
 
 ## Repository read-first protocol
 
-Every new coding agent/chat should:
+Every new project chat should:
 
 1. Read `AGENTS.md`.
 2. Read `PROJECT_PLAN_LOCKED.md` in full.
 3. Read this `PROJECT_CONTEXT.md`.
-4. If this is a production chat, read `PRODUCTION_WORKFLOW.md`.
-5. If this is a production chat, read the assigned Google Drive Work Package in full.
-6. Inspect current code and recent changes.
-7. Production chats execute only their assigned plan point; discussion chats prepare the next package without redefining product direction.
+4. Identify its role before acting.
+5. Preparation chat: read `PRODUCTION_WORKFLOW.md`, `PREPARATION_WORKFLOW.md`, the Drive Preparation Protocol and assigned Preparation package.
+6. Production chat: read `PRODUCTION_WORKFLOW.md` and the assigned Active Work Package.
+7. Failure Investigation chat: read `PRODUCTION_WORKFLOW.md`, the Failure Protocol, assigned Failure package and related production package.
+8. Inspect current repository state relevant to its assignment.
+9. Respect role boundaries and the one-plan-point/one-failure rule.
 
 ## Google Drive knowledge/archive structure
 
 The project owner requested a Drive folder named `AiLikeGPT` with:
 
 - `Plan/` — authoritative plan copies and plan-related documents.
-- `Project Information/` — project history, decisions, chat-derived information, implementation notes, and future accumulated project knowledge beginning with the initial project chat.
-- `Project Information/Production Work Packages/` — one-plan-point production assignments, their protocol, completion evidence, and templates.
+- `Project Information/` — project history, decisions, chat-derived information, implementation notes, and accumulated project knowledge.
+- `Project Information/Production Work Packages/` — Preparation, Production and Failure packages, protocols, staging, completion evidence and templates.
 
-Future project documentation should preserve this separation: stable plan in `Plan`, evolving project knowledge in `Project Information`, and executable one-point assignments in `Production Work Packages`.
+Future project documentation should preserve this separation: stable plan in `Plan`, evolving knowledge in `Project Information`, preparation in `Production Work Packages / Preparation`, staged execution packages in `Staging`, and only currently authorized implementation in `Active`.
