@@ -1,81 +1,116 @@
-# AiLikeGPT — Production Workflow
+# AiLikeGPT — Project Execution Workflow
 
-This repository uses a strict separation between **technical discussion**, **failure investigation**, and **production execution**.
+This repository uses a strict separation between **technical discussion**, **preparation/design**, **failure investigation**, and **production execution**.
 
-The authoritative operational protocol and individual Work Packages are stored in Google Drive under:
+Authoritative operational packages are stored in Google Drive under:
 
 `AiLikeGPT / Project Information / Production Work Packages`
 
-## Three chat types
+## Four chat types
 
-### Discussion chat
+### 1. Discussion chat
 
-The discussion chat is used to make technical decisions, choose the next unfinished Locked Master Plan point, and prepare the complete Work Package for that point before a production chat begins.
+The persistent Discussion chat owns sequencing and project-level technical decisions.
 
-### Failure Investigation chat
+It must:
+
+- choose the next Locked Master Plan point to prepare or execute;
+- decide when a staged Production Work Package is eligible to become Active;
+- create/activate one Preparation assignment when design work is needed;
+- give the user one short launch sentence for the next specialized chat;
+- avoid doing the specialized chat's work itself unless the owner explicitly changes the workflow.
+
+### 2. Preparation chat
+
+A Preparation chat designs **exactly one future Locked Master Plan point** from its assigned Drive package under `Preparation / Active`.
+
+It must:
+
+1. Read `AGENTS.md`, `PROJECT_PLAN_LOCKED.md`, `PROJECT_CONTEXT.md`, this file, `PREPARATION_WORKFLOW.md`, and the assigned Preparation package.
+2. Inspect the relevant current repository files.
+3. Resolve architecture, component boundaries, file-by-file implementation changes, data/state models, APIs/contracts, UI flows, migration/compatibility, tests/verification, risks and explicit boundaries as applicable.
+4. Keep repository production code read-only by default.
+5. Create a production-ready Work Package for the same Locked Plan point under `Production Work Packages / Staging`.
+6. Verify the staged package by Drive readback.
+7. Record the staged package in the Preparation package and move the Preparation package from `Preparation / Active` to `Preparation / Completed`.
+8. Stop without implementing production code or starting another plan point.
+
+A Preparation chat is incomplete if it ends with only an outline or recommendations and no executable staged Production Work Package.
+
+Detailed rule: `PREPARATION_WORKFLOW.md` and the Google Drive `Preparation Chat Protocol — One Plan Point, No Production Code`.
+
+### 3. Failure Investigation chat
 
 A Failure Investigation chat diagnoses **one concrete failed CI/build/production result** from its assigned Google Drive Failure package.
 
 It must:
 
-1. Read the assigned Failure package and the Failure Investigation Protocol in Google Drive.
+1. Read the assigned Failure package and Failure Investigation Protocol in Google Drive.
 2. Read `AGENTS.md`, `PROJECT_PLAN_LOCKED.md`, `PROJECT_CONTEXT.md`, this file, and the related production Work Package.
 3. Inspect the exact failed run/job/commit/workflow and gather the strongest available evidence.
 4. Identify the earliest defensible failure boundary, root cause, confidence, evidence, and rejected hypotheses.
-5. Remain **read-only with respect to the production fix**: do not implement the fix, do not commit a fix, and do not turn the failure chat into a production chat.
+5. Remain **read-only with respect to the production fix**: do not implement or commit the fix.
 6. Write the diagnosis back into the Failure package.
-7. **Automatically route the result to production before ending**: create a new repair Work Package under `Production Work Packages / Active`, or update the explicitly designated production package when the Failure package requires reuse.
-8. The repair package must contain the diagnosed root cause, exact fix objective, allowed changes, repair loop, verification requirements, relationship to the same Locked Plan point, and full Definition of Done.
-9. Verify the repair package by Drive readback.
-10. Move the Failure package from `Failures / Active` to `Failures / Resolved` only after production routing succeeds.
-11. End with one short launch sentence naming the exact Active production repair package for the next production chat.
+7. Automatically create or update the corresponding production repair Work Package tied to the same Locked Plan point.
+8. Verify production routing in Drive, then move the Failure package from `Failures / Active` to `Failures / Resolved`.
+9. End with one short launch sentence naming the exact production repair package.
 
-A Failure Investigation chat is incomplete if it produces only analysis/reporting without creating or updating the production repair package.
+A Failure Investigation chat is incomplete if it produces only analysis/reporting without production routing.
 
-Even when the diagnosis ends at a proven external account/platform/UI restriction, the Failure chat must still create an Active production repair package. That production package must exhaust connected capabilities and reduce any truly unavoidable external requirement to exactly one user/account action or datum.
+### 4. Production chat
 
-### Production chat
-
-A production chat executes **exactly one** assigned Locked Master Plan point from its Google Drive Work Package, including any repair package tied to that same point.
+A Production chat executes **exactly one** assigned Locked Master Plan point from its Google Drive Work Package, including a repair package tied to that same point.
 
 It must:
 
 1. Read `AGENTS.md`.
 2. Read `PROJECT_PLAN_LOCKED.md` in full.
 3. Read `PROJECT_CONTEXT.md`.
-4. Read the assigned Google Drive Work Package in full.
-5. If the package is a failure-derived repair, read the referenced resolved Failure package before changing code/settings.
+4. Read this file and the assigned Google Drive Work Package in full.
+5. Read any referenced resolved Failure package before repair work.
 6. Inspect current repository state before changing code.
-7. Execute all implementation/repair phases required by that package.
+7. Execute all implementation/repair phases required by the package.
 8. Continue through debugging, tests, repairs, reruns, and verification until every Definition of Done item is satisfied.
 9. Update repository/project context and the Work Package with completion evidence.
-10. If the repair clears a previously Blocked parent Work Package, resume and finish that original package in the same assigned plan point unless the repair package explicitly states otherwise.
-11. Stop after the assigned plan point is complete and **do not begin another plan point**.
+10. Stop after the assigned plan point is complete and do **not** begin another plan point.
 
-A production chat must not end merely because a subphase, commit, scaffold, first build attempt, failure repair, or intermediate milestone is complete. If the assigned plan point expands into many technical phases, all necessary phases remain part of the same production chat.
+A Production chat must not end merely because a subphase, commit, scaffold, first build attempt, failure repair, or intermediate milestone is complete.
 
-The only permitted incomplete ending is a **proven external blocker** outside the repository and outside the tools available to the chat. Source errors, compiler errors, test failures, build failures, and integration bugs are work to repair in the same production chat, not blockers.
+The only permitted incomplete ending is a **proven external blocker** outside the repository and outside the tools available to the chat. Source errors, compiler errors, test failures, build failures, and integration bugs are work to repair in the same Production chat.
 
-## Work Package states
+## Drive states
 
-Google Drive packages are organized as:
+Main production packages:
 
-- `Active` — package currently ready for a production chat, including failure-derived repair packages.
+- `Staging` — production-ready packages prepared in advance but not yet authorized to execute.
+- `Active` — exactly the package currently eligible for Production execution.
 - `Completed` — plan points finished with verification evidence.
-- `Blocked` — externally blocked parent packages with documented evidence.
-- `Templates` — standard package structure for future assignments.
+- `Blocked` — externally blocked production packages with documented evidence.
+- `Templates` — reusable production package structure.
+
+Preparation packages:
+
+- `Preparation / Active` — one point currently being designed.
+- `Preparation / Completed` — design complete; production package staged.
+- `Preparation / Blocked` — preparation blocked on one proven external datum/decision.
+- `Preparation / Templates` — reusable preparation structure.
+
+Failure packages:
+
 - `Failures / Active` — one failure currently being diagnosed.
-- `Failures / Resolved` — completed diagnoses that have already been routed to production.
-- `Failures / Templates` — standard failure-investigation package structure.
+- `Failures / Resolved` — completed diagnoses already routed to production.
+- `Failures / Templates` — reusable failure-investigation structure.
 
-## Failure-to-production state machine
+## Normal state machine
 
-`Production failure -> Failure/Active -> diagnose only -> create/update Production/Active repair package -> verify routing -> Failure/Resolved -> new Production chat -> repair + resume same plan point -> Production/Completed`
+`Discussion -> Preparation/Active -> design only -> Production/Staging -> Discussion promotes one package -> Production/Active -> implement + verify -> Production/Completed`
 
-The Failure chat must never perform both the diagnosis and the production fix. The handoff between those two chats is the Active repair Work Package plus the one-line launch sentence.
+## Failure state machine
+
+`Production failure -> Failures/Active -> diagnose only -> create/update production repair package -> Failures/Resolved -> new Production chat -> repair + resume same plan point -> Production/Completed`
 
 ## Current production gate
 
-The active project gate remains Locked Master Plan point **87**, CI build pipeline, until its full Definition of Done is verified green. Failure-derived repair packages for WP-087 remain part of point 87 and do not authorize point 88 or any other plan point.
+Locked Master Plan point **87**, CI build pipeline, remains the current implementation gate until its full Definition of Done is verified. While it is externally blocked, future plan points may be **prepared and staged**, but they must not be implemented in Production until the Discussion chat explicitly promotes them after the gate policy allows it.
 
 This workflow remains in force until the project owner explicitly changes it.
