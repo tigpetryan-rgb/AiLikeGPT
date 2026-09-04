@@ -6,6 +6,14 @@ Authoritative operational packages are stored in Google Drive under:
 
 `AiLikeGPT / Project Information / Production Work Packages`
 
+Read `CHAT_WORKFLOW.md` first for the compact four-role state machine.
+
+## Shared online-bootstrap invariant
+
+Every specialized chat must inspect the required GitHub/Drive workflow structure before role work. If role-specific folders/protocols/templates are missing, create only the missing pieces.
+
+Bootstrap is idempotent: never create duplicate artifacts, never silently overwrite an existing authoritative protocol, and never modify the Locked Master Plan without explicit owner authorization.
+
 ## Four chat types
 
 ### 1. Discussion chat
@@ -20,13 +28,15 @@ It must:
 - give the user one short launch sentence for the next specialized chat;
 - avoid doing the specialized chat's work itself unless the owner explicitly changes the workflow.
 
+Discussion is the only role that promotes a normal staged package from `Staging` to `Active`.
+
 ### 2. Preparation chat
 
 A Preparation chat designs **exactly one future Locked Master Plan point** from its assigned Drive package under `Preparation / Active`.
 
 It must:
 
-1. Read `AGENTS.md`, `PROJECT_PLAN_LOCKED.md`, `PROJECT_CONTEXT.md`, this file, `PREPARATION_WORKFLOW.md`, and the assigned Preparation package.
+1. Read `AGENTS.md`, `PROJECT_PLAN_LOCKED.md`, `PROJECT_CONTEXT.md`, `CHAT_WORKFLOW.md`, this file, `PREPARATION_WORKFLOW.md`, and the assigned Preparation package.
 2. Inspect the relevant current repository files.
 3. Resolve architecture, component boundaries, file-by-file implementation changes, data/state models, APIs/contracts, UI flows, migration/compatibility, tests/verification, risks and explicit boundaries as applicable.
 4. Keep repository production code read-only by default.
@@ -46,7 +56,7 @@ A Failure Investigation chat diagnoses **one concrete failed CI/build/production
 It must:
 
 1. Read the assigned Failure package and Failure Investigation Protocol in Google Drive.
-2. Read `AGENTS.md`, `PROJECT_PLAN_LOCKED.md`, `PROJECT_CONTEXT.md`, this file, and the related production Work Package.
+2. Read `AGENTS.md`, `PROJECT_PLAN_LOCKED.md`, `PROJECT_CONTEXT.md`, `CHAT_WORKFLOW.md`, this file, and the related production Work Package.
 3. Inspect the exact failed run/job/commit/workflow and gather the strongest available evidence.
 4. Identify the earliest defensible failure boundary, root cause, confidence, evidence, and rejected hypotheses.
 5. Remain **read-only with respect to the production fix**: do not implement or commit the fix.
@@ -65,7 +75,7 @@ It must:
 
 1. Read `AGENTS.md`.
 2. Read `PROJECT_PLAN_LOCKED.md` in full.
-3. Read `PROJECT_CONTEXT.md`.
+3. Read `PROJECT_CONTEXT.md` and `CHAT_WORKFLOW.md`.
 4. Read this file and the assigned Google Drive Work Package in full.
 5. Read any referenced resolved Failure package before repair work.
 6. Inspect current repository state before changing code.
@@ -77,6 +87,34 @@ It must:
 A Production chat must not end merely because a subphase, commit, scaffold, first build attempt, failure repair, or intermediate milestone is complete.
 
 The only permitted incomplete ending is a **proven external blocker** outside the repository and outside the tools available to the chat. Source errors, compiler errors, test failures, build failures, and integration bugs are work to repair in the same Production chat.
+
+## Definition of Ready — Staging to Active
+
+A staged Work Package may be promoted to Active only when it contains:
+
+- exactly one Locked Master Plan point;
+- explicit in-scope and out-of-scope boundaries;
+- exact implementation objectives;
+- affected files/components/contracts;
+- required dependencies and migration/rollback needs where relevant;
+- test/build/runtime/integration verification requirements;
+- risks and edge cases;
+- an objective Definition of Done;
+- enough detail that Production does not need to repeat major architecture/design work.
+
+If these conditions are not satisfied, Discussion must return the package to Preparation rather than starting Production.
+
+## Single-active rule
+
+By default there is at most **one Active production Work Package**. Do not start an unrelated plan point while the current gate or same-point repair is Active/Blocked unless the project owner explicitly changes sequencing.
+
+Failure Investigation may create or update an Active repair package only for the currently failing Locked Plan point; this does not authorize unrelated production work.
+
+## Evidence and context-sync rules
+
+Never claim build, test, deploy, runtime, migration, or integration success without executed evidence. Record relevant run IDs, commit SHAs, commands, artifacts, logs, screenshots, or equivalent objective proof.
+
+After a meaningful lifecycle transition, synchronize the Google Drive package state and `PROJECT_CONTEXT.md` so a brand-new chat can reconstruct current truth without conversation memory.
 
 ## Drive states
 
@@ -112,5 +150,9 @@ Failure packages:
 ## Current production gate
 
 Locked Master Plan point **87**, CI build pipeline, remains the current implementation gate until its full Definition of Done is verified. While it is externally blocked, future plan points may be **prepared and staged**, but they must not be implemented in Production until the Discussion chat explicitly promotes them after the gate policy allows it.
+
+## Reusable system template
+
+For applying this mechanism to another project, start from `MULTI_CHAT_PROJECT_WORKFLOW_TEMPLATE.md` and replace its project placeholders while preserving any stronger project-specific rules.
 
 This workflow remains in force until the project owner explicitly changes it.
