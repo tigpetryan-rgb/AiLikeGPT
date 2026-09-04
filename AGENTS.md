@@ -9,13 +9,28 @@ Before proposing, planning, or changing code:
 1. Read `PROJECT_PLAN_LOCKED.md` in full.
 2. Read `PROJECT_CONTEXT.md` for the current project state and prior decisions.
 3. Read `CHAT_WORKFLOW.md` and identify the chat role before changing project state.
-4. Read `PRODUCTION_WORKFLOW.md` if this is a Preparation, Production/execution, or Failure Investigation chat.
-5. Inspect the existing repository before making changes.
-6. If this is a Preparation chat, read `PREPARATION_WORKFLOW.md` and the assigned Google Drive Preparation package in full before designing the point.
-7. If this is a Production chat, read the assigned Google Drive Work Package in full before implementation.
-8. If this is a Failure Investigation chat, read the assigned Google Drive Failure package and Failure Investigation Protocol before diagnosis.
+4. Read `CHAT_NAMING.md`, derive the exact canonical title for this role/package, and verify or state that title before substantive role work.
+5. Read `PRODUCTION_WORKFLOW.md` if this is a Preparation, Production/execution, or Failure Investigation chat.
+6. Inspect the existing repository before making changes.
+7. If this is a Preparation chat, read `PREPARATION_WORKFLOW.md` and the assigned Google Drive Preparation package in full before designing the point.
+8. If this is a Production chat, read the assigned Google Drive Work Package in full before implementation.
+9. If this is a Failure Investigation chat, read the assigned Google Drive Failure package and Failure Investigation Protocol before diagnosis.
 
 `PROJECT_PLAN_LOCKED.md` is the authoritative master plan.
+
+## Mandatory chat-title rule
+
+Every project chat must use the canonical project/role/package naming scheme from `CHAT_NAMING.md` so it is immediately discoverable in the Project sidebar.
+
+Examples:
+
+- `[AiLikeGPT][DISCUSSION] Project Control`
+- `[AiLikeGPT][PREPARATION][PREP-###] <short title>`
+- `[AiLikeGPT][PRODUCTION][WP-###] <short title>`
+- `[AiLikeGPT][FAILURE][FAIL-###] <short title>`
+- `[AiLikeGPT][PRODUCTION][REPAIR][WP-###R#] <short title>`
+
+Every handoff must include `REQUIRED CHAT TITLE: <exact title>`. If the assistant cannot directly change the UI title, it must state the exact required title before substantive work so the user can rename the chat manually.
 
 ## Online bootstrap rule
 
@@ -29,7 +44,7 @@ The assigned chat role is a hard execution boundary.
 
 A request to perform another role's work inside the current chat does not switch the role. The chat must not partially comply with an out-of-role request.
 
-If the user requests out-of-role work, the chat must say that the requested action belongs to another role, identify that role, finish only the handoff obligations owned by the current role, and provide a short ready-to-copy launch instruction for the correct chat.
+If the user requests out-of-role work, the chat must say that the requested action belongs to another role, identify that role, finish only the handoff obligations owned by the current role, and provide a short ready-to-copy launch instruction for the correct chat, including its exact required canonical title.
 
 Examples: Preparation must not implement production code; Failure Investigation must not implement a fix; Production must not begin unrelated future plan points; Discussion must not bypass Preparation/Production lifecycle to implement code.
 
