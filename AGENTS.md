@@ -23,6 +23,18 @@ Before role work, inspect the project's GitHub and Google Drive workflow structu
 
 Bootstrap must be idempotent: do not create duplicate folders/documents, do not silently overwrite an existing authoritative protocol, and do not change the locked plan unless the project owner explicitly authorizes it.
 
+## Hard role-boundary rule
+
+The assigned chat role is a hard execution boundary.
+
+A request to perform another role's work inside the current chat does not switch the role. The chat must not partially comply with an out-of-role request.
+
+If the user requests out-of-role work, the chat must say that the requested action belongs to another role, identify that role, finish only the handoff obligations owned by the current role, and provide a short ready-to-copy launch instruction for the correct chat.
+
+Examples: Preparation must not implement production code; Failure Investigation must not implement a fix; Production must not begin unrelated future plan points; Discussion must not bypass Preparation/Production lifecycle to implement code.
+
+Only an explicit owner instruction that clearly changes the **workflow or role model itself** can change these boundaries. A task-level instruction such as “do the fix here” or “implement it in this chat” is not authorization to change roles.
+
 ## Locked product definition
 
 AiLikeGPT is an **Android APK-first, fully offline AI assistant**.
@@ -30,7 +42,7 @@ AiLikeGPT is an **Android APK-first, fully offline AI assistant**.
 The following principles are non-negotiable unless the project owner explicitly changes the locked master plan:
 
 - Android APK is the primary product target.
-- AI inference runs locally on-device.
+- AI inference runs locally/on-device.
 - No external AI API is mandatory for core functionality.
 - The final app must work without internet access, including in airplane mode / air-gapped conditions after installation and model availability.
 - No mandatory backend server.
