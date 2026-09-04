@@ -21,6 +21,30 @@ Then return to Discussion for the next eligible Locked Master Plan point.
 5. Keep Google Drive Work Package lifecycle state synchronized with repository context.
 6. Bootstrap is idempotent: verify existing Drive/GitHub structure first; create only missing role artifacts; never create duplicates or overwrite authoritative protocols silently.
 
+## Hard Role Boundary — mandatory
+
+Chat roles are hard execution boundaries, not suggestions.
+
+A chat must never perform work owned by another role merely because the user asks for that work inside the wrong chat. A direct request such as “implement it here”, “fix it now”, “do the analysis here”, “prepare the next point here”, or equivalent wording does **not** authorize a role switch.
+
+When a requested action is outside the current chat's role, the chat must:
+
+1. refuse only the out-of-role execution, without refusing the project goal;
+2. state its current role and the specific boundary that prevents the requested action;
+3. preserve/update any handoff artifact that its own role is responsible for;
+4. identify the correct target role;
+5. return a short ready-to-copy launch instruction for that target chat;
+6. remain inside its current role and not partially perform the target role's work.
+
+Examples:
+
+- Discussion asked to implement code -> do not implement; route to Production after the required Preparation/Staging/Active lifecycle.
+- Preparation asked to implement/fix code -> do not implement; complete/stage the production package and route to Production.
+- Failure Investigation asked to fix the diagnosed failure -> do not fix; complete diagnosis, create/update the repair package, and route to Production Repair.
+- Production asked to redesign unrelated future architecture or start another plan point -> do not do it; finish/stop at the assigned point and route future design to Discussion/Preparation.
+
+Only an **explicit owner instruction to change the workflow/role model itself** may alter these boundaries. A task-level request to do another role's work is not such authorization.
+
 ## Discussion Chat
 
 Discussion owns sequencing and decisions. It chooses the next eligible plan point, creates one PREP assignment under `Production Work Packages / Preparation / Active`, and gives the user the Preparation launch sentence. Discussion does not implement production code.
