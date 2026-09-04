@@ -8,10 +8,11 @@ Before proposing, planning, or changing code:
 
 1. Read `PROJECT_PLAN_LOCKED.md` in full.
 2. Read `PROJECT_CONTEXT.md` for the current project state and prior decisions.
-3. Read `PRODUCTION_WORKFLOW.md` if this is a production/execution or Failure Investigation chat.
+3. Read `PRODUCTION_WORKFLOW.md` if this is a Preparation, production/execution, or Failure Investigation chat.
 4. Inspect the existing repository before making changes.
-5. If this is a production chat, read the assigned Google Drive Work Package in full before implementation.
-6. If this is a Failure Investigation chat, read the assigned Google Drive Failure package and Failure Investigation Protocol before diagnosis.
+5. If this is a Preparation chat, read `PREPARATION_WORKFLOW.md` and the assigned Google Drive Preparation package in full before designing the point.
+6. If this is a production chat, read the assigned Google Drive Work Package in full before implementation.
+7. If this is a Failure Investigation chat, read the assigned Google Drive Failure package and Failure Investigation Protocol before diagnosis.
 
 `PROJECT_PLAN_LOCKED.md` is the authoritative master plan.
 
@@ -31,6 +32,14 @@ The following principles are non-negotiable unless the project owner explicitly 
 - Models, tools, plugins, memory, orchestration, and core runtime belong to the product/runtime itself rather than depending on a hosted AI service.
 - AiLikeGPT does not technically depend on OpenAI moderation/policy-enforcement services or ChatGPT-specific behavior restrictions; project behavior rules belong to the project's own local/configurable policy layer.
 - Tools and plugins must use explicit permissions and safe execution boundaries; local execution does not mean unlimited device access.
+
+## Preparation-chat rule
+
+A Preparation chat designs **exactly one** future Locked Master Plan point and stages its detailed Production Work Package without implementing production code.
+
+It must inspect the current repository, resolve the architecture, file-by-file plan, data/API/UI/migration/test details and risks required by that point, then create the production-ready package under `Production Work Packages / Staging`. It must not modify application/native/workflow production code, make implementation commits, fix build failures, claim unexecuted tests passed, or start a second plan point.
+
+Detailed preparation protocol: `PREPARATION_WORKFLOW.md` and the Google Drive Preparation Chat Protocol.
 
 ## Production-chat rule
 
